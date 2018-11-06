@@ -3,6 +3,11 @@ import cv2
 from skimage.measure import compare_ssim
 import imutils
 
+from darkflow.net.build import TFNet
+
+options = {"model": "yolov2-tiny.cfg", "load": "yolov2-tiny.weights", "threshold": 0.1, "labels": "labels.txt"}
+
+tfnet = TFNet(options)
 
 def get_img_objs(original, frame):
     res = frame.copy()
@@ -23,21 +28,31 @@ def get_img_objs(original, frame):
     
     # loop over the contours
     for c in cnts:
-    	# compute the bounding box of the contour and then draw the
-    	# bounding box on both input images to represent where the two
-    	# images differ
+        # compute the bounding box of the contour and then draw the
+        # bounding box on both input images to represent where the two
+        # images differ
         (x, y, w, h) = cv2.boundingRect(c)
-
         if w * h < 3000:
             continue
 
-        cv2.rectangle(res, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        roi = res[y:y+h, x:x+w]
+        result = tfnet.return_predict(roi)
+
+        for obj in result:
+            if obj['label'] == 'person' and obj['confidence'] >= 0.7:
+                x1 = obj['topleft']['x']
+                y1 = obj['topleft']['y']
+                x2 = obj['bottomright']['x']
+                y2 = obj['bottomright']['y']
+                cv2.rectangle(roi, (x1, y1), (x2, y2), (0, 0, 255), 3)
+
+        #cv2.rectangle(res, (x, y), (x + w, y + h), (0, 255, 0), 2)
     return res
 
 cap = cv2.VideoCapture(0)
 
 ret, original = cap.read()
-for _ in range(100):
+for _ in range(50):
     ret, original = cap.read()
 
 while(True):
