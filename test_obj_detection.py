@@ -9,7 +9,7 @@ def get_img_objs(frame):
     
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    bodies = body_class.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=0, minSize=(56, 112))
+    bodies = body_class.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=0, minSize=(112, 224))
     for (x, y, w, h) in bodies:
         cv2.rectangle(res, (x, y), (x + w, y + h), (0, 0, 255), 2)
 
