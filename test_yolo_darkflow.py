@@ -5,9 +5,9 @@ options = {"model": "yolov2-tiny.cfg", "load": "yolov2-tiny.weights", "threshold
 
 tfnet = TFNet(options)
 
-imgcv = cv2.imread("people.jpg")
+imgcv = cv2.imread("test5.jpg")
 result = tfnet.return_predict(imgcv)
-print(result)
+#print(result)
 
 for obj in result:
     if obj['label'] == 'person' and obj['confidence'] >= 0.7:
