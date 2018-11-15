@@ -9,7 +9,6 @@ def get_img_objs(original, frame):
     
     grayA = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
     grayB = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    #gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     (score, diff) = compare_ssim(grayA, grayB, full=True)
     if score > 0.90:
