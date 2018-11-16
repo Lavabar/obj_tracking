@@ -1,16 +1,16 @@
 import cv2
 from darkflow.net.build import TFNet
-
-options = {"model": "yolov2-tiny.cfg", "load": "yolov2-tiny.weights", "threshold": 0.1, "labels": "labels.txt"}
+path = "models/yolo/"
+options = {"model": path+"yolov2-tiny.cfg", "load": path+"yolov2-tiny.weights", "threshold": 0.1, "labels": path+"labels.txt"}
 
 tfnet = TFNet(options)
 
-imgcv = cv2.imread("test5.jpg")
+imgcv = cv2.imread("test_imgs/frame_0214.jpg")
 result = tfnet.return_predict(imgcv)
 #print(result)
 
 for obj in result:
-    if obj['label'] == 'person' and obj['confidence'] >= 0.7:
+    if obj['label'] == 'head':# and obj['confidence'] >= 0.7:
         x1 = obj['topleft']['x']
         y1 = obj['topleft']['y']
         x2 = obj['bottomright']['x']

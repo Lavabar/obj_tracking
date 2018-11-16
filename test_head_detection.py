@@ -9,13 +9,13 @@ def get_img_objs(frame):
     
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-    bodies = body_class.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=0, minSize=(112, 224))
-    for (x, y, w, h) in bodies:
+    heads = head_class.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=2, minSize=(20, 20))
+    for (x, y, w, h) in heads:
         cv2.rectangle(res, (x, y), (x + w, y + h), (0, 0, 255), 2)
 
     return res
 
-body_class = cv2.CascadeClassifier("haarcascade_fullbody.xml")
+head_class = cv2.CascadeClassifier("models/haar/haarcascade_frontalface_default.xml")
 cap = cv2.VideoCapture(0)
 
 while(True):
