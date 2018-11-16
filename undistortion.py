@@ -13,20 +13,10 @@ if __name__ == '__main__':
     import getopt
     from glob import glob
 
-    args, img_mask = getopt.getopt(sys.argv[1:], '', ['debug=', 'square_size='])
-    args = dict(args)
-    args.setdefault('--debug', '/рабочая директория/')
-    args.setdefault('--square_size', 1.0)
-    if not img_mask:
-        img_mask = '/папка с изображениями/*.png'
-    else:
-        img_mask = img_mask[0]
+    img_mask = 'chess_images/*.jpg'
+    square_size = 1.0
 
     img_names = glob(img_mask)
-    debug_dir = args.get('--debug')
-    if not os.path.isdir(debug_dir):
-        os.mkdir(debug_dir)
-    square_size = float(args.get('--square_size'))
 
     pattern_size = (9, 6)
     pattern_points = np.zeros((np.prod(pattern_size), 3), np.float32)
@@ -38,7 +28,7 @@ if __name__ == '__main__':
     h, w = 0, 0
     img_names_undistort = []
     for fn in img_names:
-        print('processing %s... ' % fn, end='')
+        print(fn)
         img = cv2.imread(fn, 0)
         if img is None:
             print("Failed to load", fn)
