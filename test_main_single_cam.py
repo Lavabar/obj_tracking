@@ -13,19 +13,11 @@ class DCTP:
 
     def __init__(self):
         # parameters for yolo
-        self.options = {"model": "yolov2-tiny.cfg", "load": "yolov2-tiny.weights", "threshold": 0.1, "labels": "labels.txt"}
+        path = "models/yolo/"
+        self.options = {"model": path+"yolov2-tiny.cfg", "load": path+"yolov2-tiny.weights", "threshold": 0.1, "labels": path+"labels.txt"}
         # init darkflow yolo implementation
         self.tfnet = TFNet(self.options)
-        # initialize OpenCV's special multi-object tracker
-        self.trackers = cv2.MultiTracker_create()
-        self.tracker = cv2.TrackerCSRT_create()
-        
-        self.flag = True
-
-    def track_objs(self, frame, objs):
-        # check if tracker already exist
-        for box in objs:
-            self.trackers.add(self.tracker, frame, box)
+        self.head_class = cv2.CascadeClassifier("models/haar/haarcascade_frontalface_default.xml")
 
     def get_objs(self, original, frame):
         """
@@ -34,7 +26,7 @@ class DCTP:
         """
         res = []
         # two grayscale images for move-detection
-        grayA = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
+        grayA = original
         grayB = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # scoring difference of current frame and original frame
@@ -62,22 +54,37 @@ class DCTP:
                     res.append((x1, y1, x2-x1, y2-y1))
         return res
 
+    def get_haar_objs(self, original, frame):
+        res = frame.copy()
+    
+        grayA = original
+        grayB = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+        # scoring difference of current frame and original frame
+        (score, diff) = compare_ssim(grayA, grayB, full=True)
+        if score > 0.90:
+            return res
+        # getting binarized image with moving areas only
+        diff = (diff * 255).astype("uint8")
+        thresh = cv2.threshold(diff, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
+        # now looking for objects
+        heads = self.head_class.detectMultiScale(grayB, scaleFactor=1.1, minNeighbors=0, minSize=(32, 64))
+        for (x, y, w, h) in heads:
+            cut = thresh[y:y+h, x:x+w]
+            pts = np.count_nonzero(cut)
+            if pts > w * h * 0.4:
+                cv2.rectangle(res, (x, y), (x + w, y + h), (0, 0, 255), 2)
+
+        return res
+
     def get_img_objs(self, original, frame):
         res = frame.copy()
         objs = []
-        if self.flag:        
-            objs = self.get_objs(original, frame)
-            self.track_objs(frame, objs)
+        objs = self.get_objs(original, frame)
         
-        # grab the updated bounding box coordinates (if any) for each
-        # object that is being tracked
-        (success, boxes) = self.trackers.update(frame)
-    
-        if boxes:
-            self.flag = False
-            for obj in boxes:
-                (x, y, w, h) = [int(v) for v in obj]
-                cv2.rectangle(res, (x, y), (x + w, y + h), (0, 0, 255), 3)
+        for obj in objs:
+            (x, y, w, h) = [int(v) for v in obj]
+            cv2.rectangle(res, (x, y), (x + w, y + h), (0, 0, 255), 2)
         
         return res
 

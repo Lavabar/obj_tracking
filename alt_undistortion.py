@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 from math import atan
 import time
-def undistortion(img, strength=3, zoom=1):
+def undistortion(img, strength=3, zoom=1)#, refPt):
     dest_img = np.zeros(img.shape, dtype=np.uint8)
 
     imageHeight, imageWidth = img.shape
@@ -31,6 +31,7 @@ def undistortion(img, strength=3, zoom=1):
             
             dest_img[y, x] = img[sourceY, sourceX]
 
+            
     return dest_img
 
 if __name__ == "__main__":

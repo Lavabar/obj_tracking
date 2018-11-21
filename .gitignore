@@ -9,3 +9,4 @@ multi-object-tracking/
 *.bz2
 *.gz
 __pycache__/
+test_videos/*
