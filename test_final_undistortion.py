@@ -99,16 +99,16 @@ def undistortion(image):
         st_dev = standard_dev(lines)
         print(st_dev)
         if st_dev < 1.3:
-            break
+            return strength
 
-    return new_image
+    return -1
 
 if __name__ == "__main__":
     path = "test_imgs/undist_test.jpg"
     img = cv2.imread(path)
-    new_image = undistortion(img)
-    cv2.imshow("undistort", new_image)
-    key = False
-    while not key:
-            key = cv2.waitKey(1) & 0xFF == ord('q')
+    strength = undistortion(img)
+    #cv2.imshow("undistort", new_image)
+    #key = False
+    #while not key:
+    #        key = cv2.waitKey(1) & 0xFF == ord('q')
     cv2.destroyAllWindows()
