@@ -2,47 +2,9 @@ import cv2
 import numpy as np
 import alt_undistortion as undist
 
-# path to test image
-path = "test_imgs/undist_test.jpg"
-image = cv2.imread(path)
-# list of points
-refPt = []
-
-# helps to find out where to make next point 
-st_model = "\n - - - \n - - - \n - - - \n - - - \n"
-
-def get_coords(event, x, y, flags, param):
-    # grab references to the global variables
-    global refPt, image, st_model
-
-    if event == cv2.EVENT_LBUTTONDOWN:
-        refPt.append([x, y])
-        cv2.rectangle(image, (x-2, y-2), (x + 2, y + 2), (0, 0, 255), 3)
-        # lighting next point
-        st_model = st_model.replace(" ", "*", 1)
-        print(st_model)
-
-cv2.namedWindow("image")
-cv2.setMouseCallback("image", get_coords)
-# lighting first point
-st_model = st_model.replace(" ", "*", 1)
-print(st_model)
-while True:
-    cv2.imshow("image", image)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-print(refPt)
-
-if len(refPt) != 16:
-    raise BaseException("Wrong number of points(should be 16)")
-
-refPt = np.asarray(refPt)
-refPt = np.reshape(refPt, (4, 4, 2))
-print(refPt)
-
 # making list of lines [[p1, p2, p3, p4],...]
 def make_lines_bypoints(refPt):
+    refPt = np.reshape(refPt, (4, 4, 2))
     lines = []
     lines.extend(refPt)
     for i in range(4):
@@ -52,7 +14,7 @@ def make_lines_bypoints(refPt):
         lines.append(line)
 
     lines = np.asarray(lines)
-    print(lines)
+    #print(lines)
     return lines
 
 # function for calcualting distance between point and line
@@ -75,7 +37,7 @@ def standard_dev(lines):
     ds = []
     for line in lines:
         d1, d2 = distance(line)
-        print("d1, d2 = %f, %f" % (d1, d2))
+        #print("d1, d2 = %f, %f" % (d1, d2))
         ds.append(d1)
         ds.append(d2)
 
@@ -84,20 +46,69 @@ def standard_dev(lines):
     ds = np.asarray(ds)
     st_dev = (np.sum(np.square(np.subtract(ds, mo_ds))) / ds.shape[0]) ** 0.5
 
-    print("st_dev:")
-    print(st_dev)
-
     return st_dev
 
-lines = make_lines_bypoints(refPt)
-st_dev = standard_dev(lines)
 
-# begining iterations
-strength = 0.3
-zoom = 1.0
-lk_params = dict( winSize = (15, 15),
-                  maxLevel = 2,
-                  criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
+def undistortion(image):
+    # list of points
+    refPt = []
+    # helps to find out where to make next point 
+    st_model = "\n - - - \n - - - \n - - - \n - - - \n"
+    # get coordinates of mouse cursor after clicking
+    def get_coords(event, x, y, flags, param):
+        # grab references to the global variables
+        nonlocal refPt, image, st_model
 
-while st_dev >= 2.0:
-    new_image = undist.undistortion(image, strength=strength, zoom=zoom)
+        if event == cv2.EVENT_LBUTTONDOWN:
+            refPt.append([x, y])
+            cv2.rectangle(copy_image, (x-2, y-2), (x + 2, y + 2), (0, 0, 255), 3)
+            # lighting next point
+            st_model = st_model.replace(" ", "*", 1)
+            print(st_model)
+    
+    copy_image = np.copy(image)
+    cv2.namedWindow("image")
+    cv2.setMouseCallback("image", get_coords)
+    # beginning process of choosing points on image
+    # lighting first point
+    st_model = st_model.replace(" ", "*", 1)
+    print(st_model)
+    while True:
+        cv2.imshow("image", copy_image)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    if len(refPt) != 16:
+        raise BaseException("Wrong number of points(should be 16)")
+
+    refPt = np.asarray(refPt)
+
+    # begining iterations
+    lines = make_lines_bypoints(refPt)
+    st_dev = standard_dev(lines)
+    print("st_dev:")
+    print(st_dev)
+    
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    strengths = [i/10 for i in range(4, 22, 2)]
+    for strength in strengths:
+        new_image, refPt = undist.undistortion_proc(image, refPt, strength=strength, zoom=1.0)
+        refPt = np.int32(refPt)
+        image = new_image
+        lines = make_lines_bypoints(refPt)
+        st_dev = standard_dev(lines)
+        print(st_dev)
+        if st_dev < 1.3:
+            break
+
+    return new_image
+
+if __name__ == "__main__":
+    path = "test_imgs/undist_test.jpg"
+    img = cv2.imread(path)
+    new_image = undistortion(img)
+    cv2.imshow("undistort", new_image)
+    key = False
+    while not key:
+            key = cv2.waitKey(1) & 0xFF == ord('q')
+    cv2.destroyAllWindows()

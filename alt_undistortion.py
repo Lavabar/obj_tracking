@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 from math import atan
 import time
-def undistortion(img, strength=3, zoom=1)#, refPt):
+def undistortion_proc(img, refPt, strength=0.1, zoom=1.0):
     dest_img = np.zeros(img.shape, dtype=np.uint8)
 
     imageHeight, imageWidth = img.shape
@@ -11,6 +11,8 @@ def undistortion(img, strength=3, zoom=1)#, refPt):
     halfHeight = imageHeight / 2
     
     correctionRadius = (imageWidth**2 + imageHeight**2)**0.5 / strength
+
+    res_refPt = np.zeros(refPt.shape)
 
     for y in range(imageHeight):
         for x in range(imageWidth):
@@ -30,15 +32,18 @@ def undistortion(img, strength=3, zoom=1)#, refPt):
             sourceY = int(halfHeight + theta * newY * zoom)
             
             dest_img[y, x] = img[sourceY, sourceX]
-
+            #print("x, y: %d, %d\nsourceX, sourceY: %d, %d" % (x, y, sourceX, sourceY))
+            for i in range(len(refPt)):
+                if (refPt[i] == [sourceX, sourceY]).all():
+                    res_refPt[i] = [y, x]
             
-    return dest_img
+    return dest_img, res_refPt
 
 if __name__ == "__main__":
     img = cv2.imread("test_imgs/undist_test2.jpg")
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     start = time.time()
-    undist = undistortion(img)
+    undist = undistortion_proc(img)
     print(time.time() - start)
     cv2.imshow("undistortioned", undist)
 
