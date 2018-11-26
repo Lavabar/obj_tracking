@@ -5,12 +5,12 @@ options = {"model": path+"yolov2-tiny.cfg", "load": path+"yolov2-tiny.weights", 
 
 tfnet = TFNet(options)
 
-imgcv = cv2.imread("test_imgs/frame_0214.jpg")
+imgcv = cv2.imread("test_imgs/crowd.jpg")
 result = tfnet.return_predict(imgcv)
 #print(result)
 
 for obj in result:
-    if obj['label'] == 'head':# and obj['confidence'] >= 0.7:
+    if obj['label'] == 'person' and obj['confidence'] >= 0.7:
         x1 = obj['topleft']['x']
         y1 = obj['topleft']['y']
         x2 = obj['bottomright']['x']
