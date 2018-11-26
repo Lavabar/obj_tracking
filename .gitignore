@@ -10,3 +10,4 @@ multi-object-tracking/
 *.gz
 __pycache__/
 test_videos/*
+*.pyc
