@@ -36,6 +36,7 @@ if __name__ == '__main__':
 
         h, w = img.shape[:2]
         found, corners = cv2.findChessboardCorners(img, pattern_size)
+        print(corners)
         if found:
             term = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_COUNT, 30, 0.1)
             cv2.cornerSubPix(img, corners, (5, 5), (-1, -1), term)
